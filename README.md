@@ -38,7 +38,7 @@ Log Stream instance.
 - `message`: A string containing the message to be logged.
 - `extra`: An object containing properties/values that will be passed with the log entry.
 
-### log.[level](message [, extra])
+### log.level(message [, extra])
 
 Options are the same as above, but the level is explicitly stated instead of allowing the message to 
 go to the default log level. (ex: log.error('This is an error message') )
@@ -49,7 +49,7 @@ The stream property of the log instance is a duplex stream. It will emit all log
 log level within the log instance, and writes to it will be re-emitted. Writes should adhere to the 
 protocol described below.
 
-### log.[level].stream 
+### log.level.stream 
 
 The stream property of each log level is a duplex stream. It will emit log entries recorded to that log 
 level, and writes to it will be emitted to itself, and the root log stream. Writes should adhere to the 

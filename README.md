@@ -33,18 +33,18 @@ Log Stream accepts the following options.
 [ ex: log.info(message) ], this option specifies which level the message is sent to.
 - `realm`: default `null` - A realm can be attached to each logger. This realm is overridden when the 
 stream is piped to another logger, by that logger's realm. 
-- `extra`: default `{}` - Extra properties/values that are applied to all entries written to this 
+- `data`: default `{}` - Extra properties/values that are passed with all entries written to this 
 Log Stream instance.
 
 
 ## API
 
-### log(message [, extra])
+### log(message [, data])
 
 - `message`: A string containing the message to be logged.
-- `extra`: An object containing properties/values that will be passed with the log entry.
+- `data`: An object containing properties/values that will be passed with the log entry.
 
-### log.level(message [, extra])
+### log.level(message [, data])
 
 Options are the same as above, but the level is explicitly stated instead of allowing the message to 
 go to the default log level. (ex: log.error('This is an error message') )
@@ -66,12 +66,27 @@ protocol described below.
 The `.pipe()` and `.on()` methods can be accessed via the log and log.[level] objects. They are simple wrappers 
 for the associated `.stream.pipe()` and `.stream.on()` methods.
 
+### log.createStream(...)
+
+`log.createStream` is used to create a filtered stream of selected levels only, useful for outputting and 
+persisting. 
+
+Example that displays only errors and fatals to the console: 
+
+``` js
+var log = require('log-stream')()
+
+log.createStream('error','fatal').pipe(process.stdout)
+log.info('This will not appear on the console.')
+log.error('But this will.')
+``` 
+
 ## Protocol
 
 Log entries are streamed in this format:
 
 ``` js
-{"time":"2012-11-14T15:17:59.108Z","realm":null,"level":"info","message":"The sky is falling!"}
+{"time":"2012-11-14T15:17:59.108Z","realm":null,"level":"info","message":"The sky is falling!","data":{}}
 ```
 
 `time` is automatically set at the time the event is recorded. 
@@ -82,20 +97,20 @@ Log entries are streamed in this format:
 
 `message` contains the message recorded. 
 
-If any `extra` properties were provided to the logger at the time it was instantiated, or passed 
-as part of the message, they will be present in the JSON chunk.
+If any `data` properties were provided to the logger at the time it was instantiated, or passed 
+as part of the message, they will be present in the JSON chunk, within the data property.
 
 ### Example
 
 ``` js
 var log = require('log-stream')({realm:"App"})
 
-log.stream.pipe(process.stdout)
+log.pipe(process.stdout)
 log.debug("Streams rock.", {whosaidit:"Jason"})
 ```
 
 results in this stream chunk:
 
 ``` js
-{"time":"2012-11-14T15:17:59.108Z","realm":"App","level":"debug","message":"Streams rock.","whosaidit":"Jason"}
+{"time":"2012-11-14T15:17:59.108Z","realm":"App","level":"debug","message":"Streams rock.","data":{"whosaidit":"Jason"}}
 ```

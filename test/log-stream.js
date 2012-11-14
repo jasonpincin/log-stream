@@ -9,13 +9,29 @@ test( 'log-stream-channels', function ( t ) {
     var log = LogStream()
 
     t.test('log-stream-levels', {parallel: true}, function (t) {
-        t.plan(7)
+        t.plan(8)
 
         var expect = ['Debug','Info','Warn','Error','Fatal']
         log.on('data', function (data) {
+            var data = JSON.parse(data)
             expect.splice(expect.indexOf(data.message),1)
             if (!expect.length) {
                 t.ok(true, 'Got all expected log messages on root stream.')
+            }
+        })
+
+        var custom = log.createStream('error', 'fatal')
+        var customExpect = ['Error','Fatal']
+        custom.on('data', function (data) {
+            var data = JSON.parse(data)
+            var expectIdx = customExpect.indexOf(data.message)
+            if (expectIdx < 0)
+                t.ok(false, 'Got an unexpected log level "'+data.level+'" in custom stream (error/fatal).')
+            else {
+                customExpect.splice(expectIdx,1)
+                if (!customExpect.length) {
+                    t.ok(true, 'Got all expected log messages on custom (error/fatal) stream.')
+                }
             }
         })
 
@@ -32,7 +48,7 @@ test( 'log-stream-channels', function ( t ) {
             var data = JSON.parse(data)
             if (data.message == 'Info') {
                 t.ok(true, 'Got expected message on info channel.')
-                t.ok(data.additional, 'Got expected extra property on info channel.')
+                t.ok(data.data.additional, 'Got expected extra property on info channel.')
             } else {
                 t.ok(false, 'Got unexpected message on info channel.')
                 t.ok(data.additional, 'Got expected extra property on info channel.')

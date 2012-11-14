@@ -5,6 +5,12 @@ transports, persistence, or anything of the sort found in most logging libraries
 Instead, it exposes streams which you can .pipe() to the writable stream of your 
 choice.
 
+## Installing
+
+``` js
+npm install log-stream
+```
+
 ## Usage
 
 ``` js

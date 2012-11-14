@@ -11,8 +11,8 @@ module.exports = LogStream = function (options) {
     ,   realm           = options.realm || null
     ,   globalData      = options.data || {}
 
-    var logger = function (message, _data) {
-        logger[defaultLevel](message, _data)
+    var logger = function () {
+        logger[defaultLevel].apply(logger[defaultLevel], arguments)
     }
     logger.stream = es.through(function write (data) {
         this.emit('data', data)
@@ -44,9 +44,15 @@ module.exports = LogStream = function (options) {
 
     var LogStreamLevel = function (level) {
 
-        var recorder = function (message, _data) {
-            var _data = _data || {}
-            ,   entry  = {time: new Date, realm: realm, level:level, message:message, data:globalData}
+        var recorder = function () {
+            var args = [].slice.apply(arguments)
+            if (typeof args[args.length-1] == 'object')
+                var _data = args.pop()
+            else
+                var _data = {}
+
+            var message = util.format.apply(util, args)
+            var entry  = {time: new Date, realm: realm, level:level, message:message, data:globalData}
             for (p in _data)
                 entry.data[p] = _data[p]
             recorder.stream.write( JSON.stringify(entry) )

@@ -21,7 +21,7 @@ var options = {defaultLevel:'info'}
 
 
 log('The sky is falling!')
-log.fatal('The last message should have been fatal.') 
+log.fatal('The last message should have been %s.', 'fatal') 
 ```
 
 ## Options
@@ -39,12 +39,14 @@ Log Stream instance.
 
 ## API
 
-### log(message [, data])
+### log(message [, arg1, arg2, ..., data])
 
-- `message`: A string containing the message to be logged.
+- `message`: A string containing the message to be logged. Messages support `util.format` style 
+formatting, and any argument after the message will be substituted into the message in the same manner 
+as `util.format`. The data argument is expected to be last. 
 - `data`: An object containing properties/values that will be passed with the log entry.
 
-### log.level(message [, data])
+### log.level(message [[, arg1, arg2, ..., data])
 
 Options are the same as above, but the level is explicitly stated instead of allowing the message to 
 go to the default log level. (ex: log.error('This is an error message') )

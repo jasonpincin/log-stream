@@ -84,8 +84,8 @@ test( 'log-stream-channels', function ( t ) {
     })
     
     process.nextTick(function () {
-        log.debug('Debug')
-        log('Info', {additional:true}) // This is default channel
+        log.debug('De%s', 'bug')
+        log('Inf%s', 'o', {additional:true}) // This is default channel
         log.warn('Warn')
         log.error('Error')
         log.fatal('Fatal')

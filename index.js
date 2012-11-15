@@ -15,22 +15,25 @@ module.exports = LogStream = function (options) {
     var logger = function () {
         logger[defaultLevel].apply(logger[defaultLevel], arguments)
     }
-    logger.stream = es.through(function write (data) {
-        var lm = JSON.parse(data)
-        if (lm.ns != localNS) {
-            if (logger[lm.level]) {
-                logger[lm.level].stream.write(data)
+    logger.stream = es.pipeline(
+        es.through(function write (data) {
+            var lm = JSON.parse(data)
+            if (lm.ns != localNS) {
+                if (logger[lm.level]) {
+                    logger[lm.level].stream.write(data)
+                }
+                else {
+                    lm.ns = localNS
+                    lm.nsPath.unshift(localNS)
+                    this.emit('data', JSON.stringify(lm))
+                }
             }
             else {
-                lm.ns = localNS
-                lm.nsPath.unshift(localNS)
-                this.emit('data', JSON.stringify(lm))
+                this.emit('data', data)            
             }
-        }
-        else {
-            this.emit('data', data)            
-        }
-    })
+        }),
+        es.pause()
+    )
     logger.pipe = function () {
         return logger.stream.pipe.apply(logger.stream, arguments)
     }
@@ -39,9 +42,7 @@ module.exports = LogStream = function (options) {
     }
     logger.createStream = function() {
         var levels = [].slice.apply(arguments)
-        var stream = es.through(function write(data) {
-            this.emit('data', data)
-        })
+        var stream = es.pause() 
         logger.pipe(es.pipeline(
               es.parse()
             , es.map(function (data, cb) {
@@ -79,6 +80,7 @@ module.exports = LogStream = function (options) {
                 cb(null, data)
             })
             , es.stringify()
+            , es.pause()
         )
         recorder.pipe = function () {
             return recorder.stream.pipe.apply(recorder.stream, arguments)

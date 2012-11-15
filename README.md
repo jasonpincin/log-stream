@@ -139,10 +139,13 @@ To persist log messages, simply pipe the log.stream to a persistent writable str
 Log entries are streamed in this format:
 
 ``` js
-{"time":"2012-11-14T15:17:59.108Z","ns":"local-ns",nsPath:["local-ns"],"level":"info","message":"The sky is falling!","data":{}}
+{"time":"2012-11-14T15:17:59.108Z","hostname":"host1",ns":"local-ns",nsPath:["local-ns"],"level":"info","message":"The sky is falling!","data":{}}
 ```
 
 `time` is automatically set at the time the event is recorded. 
+
+`hostname` contains the hostname of the node process that the log message originated from, as output from 
+`os.hostname()`
 
 `ns` will be a string (assigned or random).
 
@@ -167,5 +170,5 @@ log.debug("Streams rock.", {whosaidit:"Jason"})
 results in this stream chunk:
 
 ``` js
-{"time":"2012-11-14T15:17:59.108Z","ns":"App","nsPath":["App"],level":"debug","message":"Streams rock.","data":{"whosaidit":"Jason"}}
+{"time":"2012-11-14T15:17:59.108Z","hostname":"host1","ns":"App","nsPath":["App"],level":"debug","message":"Streams rock.","data":{"whosaidit":"Jason"}}
 ```

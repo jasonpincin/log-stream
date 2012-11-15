@@ -1,5 +1,6 @@
 var util            = require('util')
 ,   es              = require('event-stream')
+,   hostname        = require('os').hostname()
 
 var LogStream
 module.exports = LogStream = function (options) {
@@ -65,7 +66,7 @@ module.exports = LogStream = function (options) {
                 var _data = {}
 
             var message = util.format.apply(util, args)
-            var entry  = {time: new Date, ns: localNS, nsPath: [], level:level, message:message, data:globalData}
+            var entry  = {time: new Date, hostname: hostname, ns: localNS, nsPath: [], level:level, message:message, data:globalData}
             for (p in _data)
                 entry.data[p] = _data[p]
             recorder.stream.write( JSON.stringify(entry) )

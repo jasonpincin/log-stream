@@ -8,14 +8,27 @@ module.exports = LogStream = function (options) {
 
     var levels          = options.levels || ['debug','info','warn','error','fatal']
     ,   defaultLevel    = options.defaultLevel || 'info'
-    ,   realm           = options.realm || null
+    ,   localNS         = options.ns || generateNS()
     ,   globalData      = options.data || {}
 
     var logger = function () {
         logger[defaultLevel].apply(logger[defaultLevel], arguments)
     }
     logger.stream = es.through(function write (data) {
-        this.emit('data', data)
+        var lm = JSON.parse(data)
+        if (lm.ns != localNS) {
+            if (logger[lm.level]) {
+                logger[lm.level].stream.write(data)
+            }
+            else {
+                lm.ns = localNS
+                lm.nsPath.unshift(localNS)
+                this.emit('data', JSON.stringify(lm))
+            }
+        }
+        else {
+            this.emit('data', data)            
+        }
     })
     logger.pipe = function () {
         return logger.stream.pipe.apply(logger.stream, arguments)
@@ -52,7 +65,7 @@ module.exports = LogStream = function (options) {
                 var _data = {}
 
             var message = util.format.apply(util, args)
-            var entry  = {time: new Date, realm: realm, level:level, message:message, data:globalData}
+            var entry  = {time: new Date, ns: localNS, nsPath: [], level:level, message:message, data:globalData}
             for (p in _data)
                 entry.data[p] = _data[p]
             recorder.stream.write( JSON.stringify(entry) )
@@ -60,7 +73,8 @@ module.exports = LogStream = function (options) {
         recorder.stream = es.pipeline(
               es.parse()
             , es.map(function (data, cb) {
-                data.realm = realm
+                data.ns = localNS
+                data.nsPath.unshift(localNS)
                 cb(null, data)
             })
             , es.stringify()
@@ -81,4 +95,16 @@ module.exports = LogStream = function (options) {
     })
 
     return logger
+}
+
+function generateNS( ) {
+    var ns = Math
+        .floor(Math.random() * 1000000)
+        .toString(36)
+        .toUpperCase() 
+    + (new Date)
+        .getTime()
+        .toString(36)
+        .toUpperCase()
+    return ns
 }

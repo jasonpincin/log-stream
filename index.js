@@ -34,6 +34,8 @@ module.exports = LogStream = function (options) {
         }),
         es.pause()
     )
+    logger.stream.setMaxListeners(Infinity)
+
     logger.pipe = function () {
         return logger.stream.pipe.apply(logger.stream, arguments)
     }
@@ -54,6 +56,7 @@ module.exports = LogStream = function (options) {
             , es.stringify()
         )).pipe(stream)
 
+        stream.setMaxListeners(Infinity)
         return stream
     }
 
@@ -82,6 +85,8 @@ module.exports = LogStream = function (options) {
             , es.stringify()
             , es.pause()
         )
+        recorder.stream.setMaxListeners(Infinity)
+
         recorder.pipe = function () {
             return recorder.stream.pipe.apply(recorder.stream, arguments)
         }

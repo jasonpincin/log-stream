@@ -59,6 +59,25 @@ module.exports = LogStream = function (options) {
         stream.setMaxListeners(Infinity)
         return stream
     }
+    logger.textPipeline = es.pipeline(
+        es.parse(),
+        es.map(function (data,cb) {
+            data.time = new Date(data.time)
+            cb(null, util.format('%s%s %s\n',
+                (
+                    data.time.getFullYear()+'-'+
+                    ( '0' + data.time.getMonth() ).substr(-2)+'-'+
+                    ( '0' + data.time.getDate() ).substr(-2)+' '+
+                    ( '0' + data.time.getHours() ).substr(-2)+':'+
+                    ( '0' + data.time.getMinutes() ).substr(-2)+':'+
+                    ( '0' + data.time.getSeconds() ).substr(-2)+'.'+
+                    ( '00' + data.time.getMilliseconds() ).substr(-3)
+                ), 
+                data.hostname ? ' ' + data.hostname.split('.')[0] : '',
+                data.message
+            ))
+        })
+    )
 
     var LogStreamLevel = function (level) {
 

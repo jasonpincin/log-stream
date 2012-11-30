@@ -80,8 +80,11 @@ module.exports = LogStream = function (options) {
     )
 
     logger.errorHandler = function (level, msg) {
+        if (arguments.length == 1 && !(level in logger))
+            var msg = level, level = 'error'
         if (typeof level === 'undefined')
-            level = 'error'
+            var level = 'error'
+        
         return function (err) {
             if (msg)
                 logger[level](msg, err.message || err, {error: err})

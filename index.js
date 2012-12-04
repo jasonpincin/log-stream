@@ -38,8 +38,9 @@ module.exports = LogStream = function (options) {
 
     logger.connect = function (pl) {
         logger.stream.pipe(pl.stream)
+        return logger
     }
-    
+
     logger.createStream = function() {
         var levels = [].slice.apply(arguments)
         var stream = es.pause() 

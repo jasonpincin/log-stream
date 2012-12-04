@@ -44,7 +44,7 @@ module.exports = LogStream = function (options) {
     logger.createStream = function() {
         var levels = [].slice.apply(arguments)
         var stream = es.pause() 
-        logger.pipe(es.pipeline(
+        logger.stream.pipe(es.pipeline(
               es.parse()
             , es.map(function (data, cb) {
                 if (levels.indexOf(data.level) >= 0)

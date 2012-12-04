@@ -36,12 +36,10 @@ module.exports = LogStream = function (options) {
     )
     logger.stream.setMaxListeners(Infinity)
 
-    logger.pipe = function () {
-        return logger.stream.pipe.apply(logger.stream, arguments)
+    logger.connect = function (pl) {
+        logger.stream.pipe(pl.stream)
     }
-    logger.on = function () {
-        return logger.stream.on.apply(logger.stream, arguments)
-    }
+    
     logger.createStream = function() {
         var levels = [].slice.apply(arguments)
         var stream = es.pause() 

@@ -14,7 +14,7 @@ test( 'log-stream-channels', function ( t ) {
         t.plan(12)
 
         var expect = ['Debug','Info','Warn','Error','Fatal']
-        log.on('data', function (data) {
+        log.stream.on('data', function (data) {
             var data = JSON.parse(data)
             expect.splice(expect.indexOf(data.message),1)
             if (!expect.length) {

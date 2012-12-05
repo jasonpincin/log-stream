@@ -98,6 +98,8 @@ var LogStream   = require('log-stream')
 ,   log         = LogStream({ns:'main'})
 
 component.log.stream.pipe(log.stream)
+// There is also a convenience function (connect) that can be used:
+// component.log.connect(log)
 log.stream.pipe(process.stdout)
 
 log.info('Hello from main.')

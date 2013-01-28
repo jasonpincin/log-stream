@@ -27,7 +27,7 @@ log.fatal('The last message should have been %s.', 'fatal')
 
 LogStream accepts the following options.
 
-- `levels`: default `["debug","info","warn","error","fatal"]` - An array of logging levels to expose.
+- `levels`: default `["debug","info","audit",warn","error","fatal"]` - An array of logging levels to expose.
 - `defaultLevel`: default `"info"` - When using log(message) instead of explicitly specifying the level 
 [ ex: log.info(message) ], this option specifies which level the message is sent to.
 - `ns`: default `random string` - A namespace can (should) be attached to each logger. This namespace is 

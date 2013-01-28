@@ -7,7 +7,7 @@ module.exports = LogStream = function (options) {
 
     var options = options || {}
 
-    var levels          = options.levels || ['debug','info','warn','error','fatal']
+    var levels          = options.levels || ['debug','info','audit','warn','error','fatal']
     ,   defaultLevel    = options.defaultLevel || 'info'
     ,   localNS         = options.ns || generateNS()
     ,   globalData      = options.data || {}

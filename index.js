@@ -42,12 +42,12 @@ module.exports = LogStream = function (options) {
     }
 
     logger.createStream = function() {
-        var levels = [].slice.apply(arguments)
+        var _levels = (arguments.length === 1 && typeof arguments[0] === 'number') ? levels.slice(arguments[0]) : [].slice.apply(arguments)
         var stream = es.pause() 
         logger.stream.pipe(es.pipeline(
               es.parse()
             , es.map(function (data, cb) {
-                if (levels.indexOf(data.level) >= 0)
+                if (_levels.indexOf(data.level) >= 0)
                     cb(null, data)
                 else
                     cb()

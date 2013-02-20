@@ -82,6 +82,17 @@ log.info('This will not appear on the console.')
 log.error('But this will.')
 ``` 
 
+You may also specify a single integer with `log.createStream` to include all log levels starting at the 
+index specified.
+
+``` js
+var log = require('log-stream')({ns:'custom-example', levels:['debug','error','fatal']})
+
+log.createStream(1).pipe(process.stdout)
+log.debug('This will not appear on the console.')
+log.error('But this will.')
+```
+
 ## Chaining
 
 LogStream supports chaining loggers via simple pipes. This is useful when a required component being used 

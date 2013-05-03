@@ -13,7 +13,7 @@ npm install log-stream
 ## Usage
 
 ``` js
-var options = {defaultLevel:'info', ns:'simple-app'}
+var options = {defaultLevel:'info', prefix:'simple-app'}
 ,   log 
 (log = require('log-stream')(options) )
     .stream.pipe(process.stdout)
@@ -30,13 +30,7 @@ LogStream accepts the following options.
 - `levels`: default `["debug","info","audit",warn","error","fatal"]` - An array of logging levels to expose.
 - `defaultLevel`: default `"info"` - When using log(message) instead of explicitly specifying the level 
 [ ex: log.info(message) ], this option specifies which level the message is sent to.
-- `ns`: default `random string` - A namespace can (should) be attached to each logger. This namespace is 
-overridden when the stream is piped to another logger by that logger's namespace; however, the full 
-namespace path is available as an array in the nsPath property of the log entry (see protocol below). The 
-namespace is important for chaining log streams. LogStream expects the namespace of two LogStream 
-instances being chained (see chaining below) via pipe to be different. To facilitate this, a random 
-namespace will be generated if you do not provide one. Namespacing your logging components can help make 
-more sense of your logging paths however, and is recommended.
+- `prefix`: default `null` - Will be included in message as `prefix`, and will be included in text output before message.
 - `data`: default `{}` - Extra properties/values that are passed with all entries written to this 
 LogStream instance.
 
@@ -75,7 +69,7 @@ persisting.
 Example that displays only errors and fatals to the console: 
 
 ``` js
-var log = require('log-stream')({ns:'custom-example'})
+var log = require('log-stream')({prefix:'custom-example'})
 
 log.createStream('error','fatal').pipe(process.stdout)
 log.info('This will not appear on the console.')
@@ -86,7 +80,7 @@ You may also specify a single integer with `log.createStream` to include all log
 index specified.
 
 ``` js
-var log = require('log-stream')({ns:'custom-example', levels:['debug','error','fatal']})
+var log = require('log-stream')({prefix:'custom-example', levels:['debug','error','fatal']})
 
 log.createStream(1).pipe(process.stdout)
 log.debug('This will not appear on the console.')
@@ -95,7 +89,7 @@ log.error('But this will.')
 
 ## Chaining
 
-LogStream supports chaining loggers via simple pipes. This is useful when a required component being used 
+LogStream supports chaining loggers via events. This is useful when a required component being used 
 provides a log-stream interface, and you would like to include it's output in your program's own LogStream 
 output. 
 
@@ -104,13 +98,10 @@ Chaining Example:
 main.js
 
 ``` js
-var LogStream   = require('log-stream')
-,   component   = require('./component.js')
-,   log         = LogStream({ns:'main'})
+var log         = require('log-stream')({prefix:'main'})
+,   component   = require('./component')
 
-component.log.stream.pipe(log.stream)
-// There is also a convenience function (connect) that can be used:
-// component.log.connect(log)
+component.on('log', log)
 log.stream.pipe(process.stdout)
 
 log.info('Hello from main.')
@@ -120,28 +111,37 @@ component.doSomething()
 component.js
 
 ``` js
-var LogStream   = require('log-stream')
-,   log         = LogStream({ns:'component'})
+var log         = require('log-stream')({prefix:'component'})
+,   EventStream = require('events').EventStream
+,   util        = require('util')
 
-module.exports = {
-    log: log,
-    doSomething: function () {
-        log.warn('The component tried to do something.')
-    }
+function Something () {
+    log.on('log', this.emit.bind(this, 'log'))
 }
+util.inherits(Something, EventStream)
+Something.prototype.doSomething = function () {
+    log.warn('The component tried to do something.')
+}
+
+module.exports = Something
 ```
 
 Running `node main.js` will result in the following output:
 
 ``` js
-{"time":"...","ns":"main","nsPath":["main"],"level":"info","message":"Hello from main.","data":{}}
-{"time":"...","ns":"main","nsPath":["main","component"],"level":"warn","message":"The component tried to do something.","data":{}}
+{"time":"...","prefix":"main","level":"info","message":"Hello from main.","data":{}}
+{"time":"...","prefix":"main","level":"warn","message":"The component tried to do something.","data":{}}
 ```
 
-When one LogStream instance is piped to another, the levels levels are piped as well. This means, in the example 
-above, that the warning logged in component.js would also be emitted in the warning level of the LogStream 
-instance of main.js. If a log message is recorded in a level that does not exist in the LogStream instance it is 
-being piped to, it will only be emitted on the destination LogStream from the primary log.stream. 
+As you can see, logs can be connected easily by emitting the log events of one to the other.
+
+## Text
+
+To pipe textual output instead of JSON, you can use the built in text stream. 
+
+``` js
+log.text.pipe(console.stdout)
+```
 
 ## Persistence
 
@@ -152,7 +152,7 @@ To persist log messages, simply pipe the log.stream to a persistent writable str
 Log entries are streamed in this format:
 
 ``` js
-{"time":"2012-11-14T15:17:59.108Z","hostname":"host1",ns":"local-ns",nsPath:["local-ns"],"level":"info","message":"The sky is falling!","data":{}}
+{"time":"2012-11-14T15:17:59.108Z","hostname":"host1","prefix":"local","level":"info","message":"The sky is falling!","data":{}}
 ```
 
 `time` is automatically set at the time the event is recorded. 
@@ -160,9 +160,7 @@ Log entries are streamed in this format:
 `hostname` contains the hostname of the node process that the log message originated from, as output from 
 `os.hostname()`
 
-`ns` will be a string (assigned or random).
-
-`nsPath` will contain an array of all namespaces the log message traversed (when chaining).
+`prefix` will be a string or null.
 
 `level` will contain the level in which the message was recorded.
 
@@ -174,7 +172,7 @@ as part of the message, they will be present in the JSON chunk, within the data 
 ### Example
 
 ``` js
-var log = require('log-stream')({ns:"App"})
+var log = require('log-stream')({prefix:"App"})
 
 log.stream.pipe(process.stdout)
 log.debug("Streams rock.", {whosaidit:"Jason"})
@@ -183,5 +181,5 @@ log.debug("Streams rock.", {whosaidit:"Jason"})
 results in this stream chunk:
 
 ``` js
-{"time":"2012-11-14T15:17:59.108Z","hostname":"host1","ns":"App","nsPath":["App"],level":"debug","message":"Streams rock.","data":{"whosaidit":"Jason"}}
+{"time":"2012-11-14T15:17:59.108Z","hostname":"host1","prefix":"App",level":"debug","message":"Streams rock.","data":{"whosaidit":"Jason"}}
 ```

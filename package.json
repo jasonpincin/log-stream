@@ -1,34 +1,37 @@
 {
-    "name" : "log-stream",
-    "version" : "1.1.0",
-    "description" : "A pure streaming take on logging",
-    "main" : "./index.js",
-    "keywords" : [
-         "log"
-        ,"logging"
-        ,"stream"
-        ,"streaming"
-        ,"streams"
-    ],
-    "repository" : {
-         "type" : "git"
-        ,"url" : "http://github.com/jasonpincin/log-stream.git"
-    },
-    "dependencies": {
-      "event-stream": "~3.0.7"
-    },
-    "devDependencies" : {
-         "tap" : "~0.3.1"
-    },
-    "scripts" : {
-        "test" : "tap test"
-    },
-    "engine" : {
-        "node" : ">=0.8.8"
-    },
-    "author" : {
-        "name" : "Jason Pincin",
-        "email" : "jason@pincin.com",
-        "url" : "http://jason.pincin.com"
-    }
+  "name": "log-stream",
+  "version": "2.0.0",
+  "description": "A pure streaming take on logging",
+  "main": "./index.js",
+  "keywords": [
+    "log",
+    "logging",
+    "stream",
+    "streaming",
+    "streams"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/jasonpincin/log-stream.git"
+  },
+  "dependencies": {
+    "pause-stream": "0.0.10",
+    "through": "~2.3.4",
+    "stream-combiner": "0.0.2",
+    "map-stream": "0.0.2"
+  },
+  "devDependencies": {
+    "tap": "~0.3.1"
+  },
+  "scripts": {
+    "test": "tap test"
+  },
+  "engine": {
+    "node": ">=0.8.8"
+  },
+  "author": {
+    "name": "Jason Pincin",
+    "email": "jason@pincin.com",
+    "url": "http://jason.pincin.com"
+  }
 }

@@ -136,6 +136,9 @@ module.exports = LogStream = function (options) {
         recorder.on = function () {
             return recorder.stream.on.apply(recorder.stream, arguments)
         }
+        recorder.once = function () {
+            return recorder.stream.once.apply(recorder.stream, arguments)
+        }
 
         return recorder
     }
@@ -147,4 +150,3 @@ module.exports = LogStream = function (options) {
 
     return logger
 }
-

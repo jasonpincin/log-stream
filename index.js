@@ -63,6 +63,7 @@ module.exports = LogStream = function (options) {
 
     logger.events = new EventEmitter()
     logger.on = logger.events.on.bind(logger.events)
+    logger.once = logger.events.once.bind(logger.events)
     logger.emit = logger.events.emit.bind(logger.events)
 
     logger.stream = pipeline(

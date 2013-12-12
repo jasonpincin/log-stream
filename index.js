@@ -126,6 +126,23 @@ module.exports = LogStream = function (options) {
             for (var p in _data)
                 entry.data[p] = _data[p]
             recorder.stream.write( JSON.stringify(entry) )
+
+            var errorObject = new Error(message)
+            errorObject.level = level
+            errorObject.data = entry.data
+            errorObject.time = entry.time
+            errorObject.prefix = logPrefix
+            errorObject.hostname = hostname
+
+            return {
+                errorObject: errorObject,
+                callWithError: function callWithError (cb) {
+                    cb(errorObject)
+                },
+                andCallWithError: function andCallWithError (cb) {
+                    cb(errorObject)
+                }
+            }
         }
         recorder.stream = pause()
         recorder.stream.setMaxListeners(Infinity)

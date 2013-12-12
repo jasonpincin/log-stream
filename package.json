@@ -1,6 +1,6 @@
 {
   "name": "log-stream",
-  "version": "2.1.1",
+  "version": "3.0.0",
   "description": "A pure streaming take on logging",
   "main": "./index.js",
   "keywords": [

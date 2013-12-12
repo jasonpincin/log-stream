@@ -13,14 +13,11 @@ npm install log-stream
 ## Usage
 
 ``` js
-var options = {defaultLevel:'info', prefix:'simple-app'}
-,   log 
-(log = require('log-stream')(options) )
-    .stream.pipe(process.stdout)
-
+var log = require('log-stream')()
+log.stream.pipe(process.stdout)
 
 log('The sky is falling!')
-log.fatal('The last message should have been %s.', 'fatal') 
+log.fatal('This message should be %s.', 'fatal') 
 ```
 
 ## Options
@@ -37,6 +34,8 @@ LogStream instance.
 
 ## API
 
+### log = require('log-stream')([options])
+
 ### log(message [, arg1, arg2, ..., data])
 
 - `message`: A string containing the message to be logged. Messages support `util.format` style 
@@ -44,10 +43,19 @@ formatting, and any argument after the message will be substituted into the mess
 as `util.format`. The data argument is expected to be last. 
 - `data`: An object containing properties/values that will be passed with the log entry.
 
-### log.level(message [[, arg1, arg2, ..., data])
+### log.level(message [, arg1, arg2, ..., data])
 
 Options are the same as above, but the level is explicitly stated instead of allowing the message to 
 go to the default log level. (ex: log.error('This is an error message') )
+
+### log.level(message [, arg1, arg2, ..., data]).callWithError(cb)
+### log.level(message [, arg1, arg2, ..., data]).andCallWithError(cb)
+
+Often you may want to log an error, and execute an error-first style callback with the error you just 
+logged. log-stream makes this easier by returning an object on log calls that exposes the `callWithError` 
+(and it's alias `andCallWithError`) function which accepts a callback. The callback will be executed and 
+passed an Error() object as the 1st argument. This error object will expose: `message`, `level`, `time`, 
+`prefix`, and `hostname`.
 
 ### log.stream 
 
@@ -65,6 +73,8 @@ protocol described below.
 
 `log.createStream` is used to create a filtered stream of selected levels only, useful for outputting and 
 persisting. 
+
+## Examples
 
 Example that displays only errors and fatals to the console: 
 
@@ -85,6 +95,21 @@ var log = require('log-stream')({prefix:'custom-example', levels:['debug','error
 log.createStream(1).pipe(process.stdout)
 log.debug('This will not appear on the console.')
 log.error('But this will.')
+```
+
+Here we log an error in a function and stop execution, supplying error to callback.
+
+``` js
+function doSomething (cb) {
+    // Do something
+    if (err) return log.error('An error occured.').andCallWithError(cb)
+}
+
+// Here's another way of doing the same thing, perhaps a little less readable
+function doSomething (cb) {
+    // Do something
+    if (err) return cb( log.error('An error occured.').errorObject )
+}
 ```
 
 ## Chaining

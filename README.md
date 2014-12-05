@@ -1,5 +1,13 @@
 # log-stream
 
+[![Build Status](https://travis-ci.org/jasonpincin/log-stream.svg?branch=master)](https://travis-ci.org/jasonpincin/log-stream)
+[![Coverage Status](https://coveralls.io/repos/jasonpincin/log-stream/badge.png?branch=master)](https://coveralls.io/r/jasonpincin/log-stream?branch=master)
+[![NPM version](https://badge.fury.io/js/log-stream.png)](http://badge.fury.io/js/log-stream)
+[![Davis Dependency Status](https://david-dm.org/jasonpincin/log-stream.png)](https://david-dm.org/jasonpincin/log-stream)
+
+[![browser support](https://ci.testling.com/jasonpincin/log-stream.png)
+](https://ci.testling.com/jasonpincin/log-stream)
+
 Very simple take on logging. This package doesn't concern itself with transports, 
 persistence, or anything of the sort.  Instead, it exposes streams which you can 
 .pipe() around as you see fit.

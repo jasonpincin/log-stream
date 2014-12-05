@@ -1,32 +1,28 @@
-var tap           = require( 'tap' )
-,   test          = tap.test
+var test      = require('tape'),
+    logStream = require('..')
+require('./polyfills')
 
-test( 'log-stream-channels', function ( t ) {
+test( 'log-stream', function ( t ) {
 
-    var LogStream = require( '../index.js' );
-    t.ok( LogStream, "loaded" );
+    var log = logStream({name:'test'})
 
-    var log = LogStream({prefix:'local1'})
-    var log2 = LogStream({prefix:'local2'})
-    log.connect(log2) //stream.pipe(log2.stream)
-
-    t.test('log-stream-levels', {parallel: true}, function (t) {
-        t.plan(12)
+    t.test('levels', {parallel: true}, function (t) {
+        t.plan(11)
 
         var expect = ['Debug','Info','Warn','Error','Fatal']
         log.stream.on('data', function (data) {
-            var data = JSON.parse(data)
-            expect.splice(expect.indexOf(data.message),1)
+            data = JSON.parse(data)
+            expect.splice(expect.indexOf(data.msg),1)
             if (!expect.length) {
                 t.ok(true, 'Got all expected log messages on root stream.')
             }
         })
 
-        var custom = log.createStream('error', 'fatal')
+        var custom = log.createStream('error')
         var customExpect = ['Error','Fatal']
         custom.on('data', function (data) {
-            var data = JSON.parse(data)
-            var expectIdx = customExpect.indexOf(data.message)
+            data = JSON.parse(data)
+            var expectIdx = customExpect.indexOf(data.msg)
             if (expectIdx < 0)
                 t.ok(false, 'Got an unexpected log level "'+data.level+'" in custom stream (error/fatal).')
             else {
@@ -37,76 +33,57 @@ test( 'log-stream-channels', function ( t ) {
             }
         })
 
-        log.debug.on('data', function (data) {
-            var data = JSON.parse(data)
-            if (data.message === 'Debug') {
+        log.debug.stream.on('data', function (data) {
+            data = JSON.parse(data)
+            if (data.msg === 'Debug') {
                 t.ok(true, 'Got expected message on debug channel.')
             } else {
                 t.ok(false, 'Got unexpected message on debug channel.')
             }
         })
 
-        log2.info.on('data', function (data) {
-            var data = JSON.parse(data)
-            if (data.message === 'Info') {
-                t.ok(true, 'Got expected message on info channel of pipe target.')
-            } else {
-                t.ok(false, 'Got unexpected message on info channel of pipe target: ' + data.message)
-            }
-            t.ok(data.data.additional, 'Got expected extra property on info channel of pipe target.')
-        })
-
-        log.info.on('data', function (data) {
-            var data = JSON.parse(data)
-            if (data.message === 'Info') {
+        log.info.stream.on('data', function (data) {
+            data = JSON.parse(data)
+            if (data.msg === 'Info') {
                 t.ok(true, 'Got expected message on info channel.')
             } else {
                 t.ok(false, 'Got unexpected message on info channel.')
             }
-            t.ok(data.data.additional, 'Got expected extra property on info channel.')
+            t.ok(data.additional, 'Got expected extra property on info channel.')
         })
 
-        log.audit.on('data', function (data) {
-            var data = JSON.parse(data)
-            if (data.message === 'Audit') {
-                t.ok(true, 'Got expected message on audit channel.')
-            } else {
-                t.ok(false, 'Got unexpected message on audit channel.')
-            }
-        })
-
-        log.warn.on('data', function (data) {
-            var data = JSON.parse(data)
-            if (data.message === 'Warn') {
+        log.warn.stream.on('data', function (data) {
+            data = JSON.parse(data)
+            if (data.msg === 'Warn') {
                 t.ok(true, 'Got expected message on warn channel.')
             } else {
                 t.ok(false, 'Got unexpected message on warn channel.')
             }
         })
 
-        log.error.on('data', function (data) {
-            var data = JSON.parse(data)
-            if (data.message === 'Error') {
+        log.error.stream.on('data', function (data) {
+            data = JSON.parse(data)
+            if (data.msg === 'Error') {
                 t.ok(true, 'Got expected message on error channel.')
             } else {
                 t.ok(false, 'Got unexpected message on error channel.')
             }
         })
 
-        log.fatal.on('data', function (data) {
-            var data = JSON.parse(data)
-            if (data.message === 'Fatal') {
+        log.fatal.stream.on('data', function (data) {
+            data = JSON.parse(data)
+            if (data.msg === 'Fatal') {
                 t.ok(true, 'Got expected message on fatal channel.')
             } else {
                 t.ok(false, 'Got unexpected message on fatal channel.')
             }
         })
     })
-    
+
     process.nextTick(function () {
         log.debug('De%s', 'bug')
-        log('Inf%s', 'o', {additional:true}) // This is default channel
-        log.audit('Audit')
+        log( {additional:true}, 'Inf%s', 'o') // This is default channel
+        log( 'info', {additional:true}, 'Inf%s', 'o') // This is default channel
         log.warn('Warn')
         log.error('Error')
         log.fatal('Fatal')

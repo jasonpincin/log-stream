@@ -1,144 +1,97 @@
-var util            = require('util')
-,   EventEmitter    = require('events').EventEmitter
-,   pause           = require('pause-stream')
-,   through         = require('through')
-,   pipeline        = require('stream-combiner')
-,   map             = require('map-stream')
-,   hostname        = require('os').hostname()
+var util         = require('util'),
+    assert       = require('assert'),
+    EventEmitter = require('events').EventEmitter,
+    pause        = require('pause-stream'),
+    through      = require('through'),
+    pipeline     = require('stream-combiner'),
+    map          = require('map-stream'),
+    hostname     = require('os').hostname(),
+    pid          = process.pid
 
-var LogStream
-module.exports = LogStream = function (options) {
+var logStream = module.exports = function (options) {
 
-    var options = options || {}
+    assert(typeof options === 'object' && typeof options.name === 'string', 'log-stream requires a name option')
 
-    var levels          = options.levels || ['debug','info','audit','warn','error','fatal']
-    ,   defaultLevel    = options.defaultLevel || 'info'
-    ,   logPrefix       = options.prefix || options.ns || null // Support ns for legacy reasons
-    ,   globalData      = options.data || {}
+    var levels       = options.levels || { 'trace': 10, 'debug': 20,'info': 30,'warn': 40,'error': 50,'fatal': 60 },
+        defaultLevel = options.defaultLevel || 'info',
+        name         = options.name
 
-    var createTextStream = function () {
-        var textStream = map(function (data,cb) {
-            if (!data) return cb()
-                var data = JSON.parse(data)
-            data.time = new Date(data.time)
-            cb(null, util.format('%s%s%s%s %s %s\n',
-                (
-                    data.time.getFullYear()+'-'+
-                        ( '0' + data.time.getMonth() ).substr(-2)+'-'+
-                        ( '0' + data.time.getDate() ).substr(-2)+' '+
-                        ( '0' + data.time.getHours() ).substr(-2)+':'+
-                        ( '0' + data.time.getMinutes() ).substr(-2)+':'+
-                        ( '0' + data.time.getSeconds() ).substr(-2)+'.'+
-                        ( '00' + data.time.getMilliseconds() ).substr(-3)
-                ), 
-                data.hostname ? ' ' + data.hostname.split('.')[0] : '',
-                logPrefix ? ' ' + logPrefix : '',
-                data.logPrefix ? '/' + data.logPrefix : '',
-                data.level,
-                data.message
-            ))
-        })
-        return textStream
-    }
+    var levelNames   = Object.keys(levels)
 
     var logger = function () {
         var args = [].slice.apply(arguments)
-        if (levels.indexOf(args[0]) !== -1) {
+        if (~levelNames.indexOf(args[0])) {
             var lvl = args.shift()
-            try {
-                var ld = JSON.parse(args[0])
-                if (logger[lvl])
-                    logger[lvl].stream.write(args[0])
-            }
-            catch (err) {
-                if (logger[lvl])
-                    logger[lvl].apply(logger[lvl], args)
-                else
-                    throw new Error('Error in log-stream, attempting to use unknown level: ' + lvl)
-            }
+            logger[lvl].apply(logger[lvl], args)
         } else {
-            logger[defaultLevel].apply(logger[defaultLevel], arguments)
+            logger[defaultLevel].apply(logger[defaultLevel], args)
         }
     }
-
-    logger.events = new EventEmitter()
-    logger.on = logger.events.on.bind(logger.events)
-    logger.once = logger.events.once.bind(logger.events)
-    logger.emit = logger.events.emit.bind(logger.events)
+    Object.getOwnPropertyNames(EventEmitter.prototype).forEach(function (prop) {
+        logger[prop] = EventEmitter.prototype[prop]
+    })
+    EventEmitter.call(logger)
 
     logger.stream = pipeline(
         through(function write (data) {
             this.emit('data', data)
-            logger.text.write(data)
             logger.emit('log', JSON.parse(data).level, data)
         }),
         pause()
     )
     logger.stream.setMaxListeners(Infinity)
 
-    logger.connect = function (pl) {
-        logger.events.on('log', pl)
-        return logger
-    }
-
-    logger.createStream = function() {
-        var _levels = (arguments.length === 1 && typeof arguments[0] === 'number') ? levels.slice(arguments[0]) : [].slice.apply(arguments)
-        var stream = pause() 
+    logger.createStream = function(minLevel) {
+        var stream = pause()
         logger.stream.pipe(map(function (data, cb) {
-            if (_levels.indexOf(JSON.parse(data).level) >= 0)
+            if (JSON.parse(data).level >= levels[minLevel])
                 cb(null, data)
             else
                 cb()
         })).pipe(stream)
 
         stream.setMaxListeners(Infinity)
-        stream.text = createTextStream()
-        stream.on('data', stream.text.write.bind(stream.text))
         return stream
     }
-    logger.text = createTextStream()
 
     logger.errorHandler = function (level, msg) {
         if (arguments.length === 1 && !(level in logger))
-            var msg = level, level = 'error'
+            msg = level, level = 'error'
         if (typeof level === 'undefined')
-            var level = 'error'
-        
+            level = 'error'
+
         return function (err) {
+            if (!err) return
+            var data = {}
+            if (typeof err === 'object')
+                data.err = {message: err.message, name: err.name, stack: err.stack}
             if (msg)
-                logger[level](msg, err.message || err, {error: err})
+                logger[level](data, msg)
             else
-                logger[level](err.message || err, {error:err})
+                logger[level](data, err.message || err)
         }
     }
 
     var LogStreamLevel = function (level) {
 
         var recorder = function () {
-            var args = [].slice.apply(arguments)
-            if (typeof args[args.length-1] === 'object')
-                var _data = args.pop()
+            var _data, args = [].slice.apply(arguments)
+            if (typeof args[0] === 'object')
+                _data = args.shift()
             else
-                var _data = {}
+                _data = {}
 
             var message = util.format.apply(util, args)
-            var entry  = {time: new Date(), hostname: hostname, prefix: logPrefix, level:level, message:message, data:globalData}
+            var entry  = { name: name, hostname: hostname, pid: pid, level: levels[level], msg: message, time: (new Date()).toISOString(), v:1 }
             for (var p in _data)
-                entry.data[p] = _data[p]
-            recorder.stream.write( JSON.stringify(entry) )
+                entry[p] = _data[p]
+            recorder.stream.write( JSON.stringify(entry) + '\n' )
 
             var errorObject = new Error(message)
-            errorObject.level = level
-            errorObject.data = entry.data
-            errorObject.time = entry.time
-            errorObject.prefix = logPrefix
-            errorObject.hostname = hostname
+            errorObject.log = entry
 
             return {
                 errorObject: errorObject,
-                callWithError: function callWithError (cb) {
-                    cb(errorObject)
-                },
                 andCallWithError: function andCallWithError (cb) {
                     cb(errorObject)
                 }
@@ -147,20 +100,10 @@ module.exports = LogStream = function (options) {
         recorder.stream = pause()
         recorder.stream.setMaxListeners(Infinity)
 
-        recorder.pipe = function () {
-            return recorder.stream.pipe.apply(recorder.stream, arguments)
-        }
-        recorder.on = function () {
-            return recorder.stream.on.apply(recorder.stream, arguments)
-        }
-        recorder.once = function () {
-            return recorder.stream.once.apply(recorder.stream, arguments)
-        }
-
         return recorder
     }
 
-    levels.forEach(function (l) { 
+    levelNames.forEach(function (l) {
         logger[l] = LogStreamLevel(l)
         logger[l].stream.pipe(logger.stream)
     })

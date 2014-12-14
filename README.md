@@ -1,24 +1,21 @@
 # log-stream
 
+[![NPM version](https://badge.fury.io/js/log-stream.png)](http://badge.fury.io/js/log-stream)
 [![Build Status](https://travis-ci.org/jasonpincin/log-stream.svg?branch=master)](https://travis-ci.org/jasonpincin/log-stream)
 [![Coverage Status](https://coveralls.io/repos/jasonpincin/log-stream/badge.png?branch=master)](https://coveralls.io/r/jasonpincin/log-stream?branch=master)
-[![NPM version](https://badge.fury.io/js/log-stream.png)](http://badge.fury.io/js/log-stream)
 [![Davis Dependency Status](https://david-dm.org/jasonpincin/log-stream.png)](https://david-dm.org/jasonpincin/log-stream)
-
-[![browser support](https://ci.testling.com/jasonpincin/log-stream.png)
-](https://ci.testling.com/jasonpincin/log-stream)
 
 Very simple take on logging. This package doesn't concern itself with transports, 
 persistence, or anything of the sort.  Instead, it exposes streams which you can 
 .pipe() around as you see fit.
 
-## Installing
+## installing
 
 ``` js
 npm install --save log-stream
 ```
 
-## Usage
+## usage
 
 ``` js
 var log = require('log-stream')({name: 'myApp'})
@@ -28,7 +25,7 @@ log('The sky is falling!')
 log.fatal('This message should be %s.', 'fatal') 
 ```
 
-## Options
+## options
 
 LogStream accepts the following options.
 
@@ -38,7 +35,7 @@ LogStream accepts the following options.
   level the message is sent to.
 
 
-## API
+## api
 
 ### log = require('log-stream')([options])
 
@@ -88,7 +85,7 @@ protocol described below.
 `log.createStream` is used to create a filtered stream of selected level and above only, useful for outputting and 
 persisting. 
 
-## Examples
+## examples
 
 Example that displays only errors and fatals to the console: 
 
@@ -115,11 +112,11 @@ function doSomething (cb) {
 }
 ```
 
-## Persistence
+## persistence
 
 To persist log messages, simply pipe the log.stream to a persistent writable stream.
 
-## Protocol
+## protocol
 
 Log entries are streamed in this format:
 
@@ -140,7 +137,7 @@ Log entries are streamed in this format:
 
 If any `data` properties were passed as part of the message, they will be present in the JSON chunk as well.
 
-### Example
+### example
 
 ``` js
 var log = require('log-stream')({name:"App"})
@@ -154,3 +151,27 @@ results in a stream chunk like:
 ``` js
 {"name":"myApp","hostname":"localhost","pid":55736,"level":20,"msg":"stream all the things","time":"2014-12-05T05:12:08.814Z","v":1,"why":"because"}
 ```
+
+## testing
+
+`npm test [--dot | --spec] [--coverage]`
+
+### options
+
+* `--dot` - output test results as dots instead of tap
+* `--spec` - output test results as spec instead of tap
+* `--coverage` - display text cover report
+  
+
+### patterns
+
+Only run test files matching a certain pattern by prefixing the 
+test command with `grep=pattern`. Example:
+
+```
+grep=connect npm test --dot
+```
+
+### html coverage report
+
+Open it with `npm run view-cover` or `npm run vc`

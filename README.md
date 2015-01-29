@@ -152,26 +152,14 @@ results in a stream chunk like:
 {"name":"myApp","hostname":"localhost","pid":55736,"level":20,"msg":"stream all the things","time":"2014-12-05T05:12:08.814Z","v":1,"why":"because"}
 ```
 
+
 ## testing
 
-`npm test [--dot | --spec] [--coverage]`
+`npm test [--dot | --spec] [--coverage | --grep=pattern]`
 
-### options
+Specifying `--dot` or `--spec` will change the output from the default TAP style. 
+Specifying `--coverage` will print a text coverage summary to the terminal after 
+tests have ran, while `--pattern` will only run the test files that match the given 
+pattern.
 
-* `--dot` - output test results as dots instead of tap
-* `--spec` - output test results as spec instead of tap
-* `--coverage` - display text cover report
-  
-
-### patterns
-
-Only run test files matching a certain pattern by prefixing the 
-test command with `grep=pattern`. Example:
-
-```
-grep=connect npm test --dot
-```
-
-### html coverage report
-
-Open it with `npm run view-cover` or `npm run vc`
+Open an html coverage report with `npm run view-cover`.

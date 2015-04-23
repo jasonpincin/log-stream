@@ -143,7 +143,7 @@ If any `data` properties were passed as part of the message, they will be presen
 var log = require('log-stream')({name:"App"})
 
 log.stream.pipe(process.stdout)
-log.debug("stream all the things", {why:"because"})
+log.debug({why:"because"}, "stream all the things")
 ```
 
 results in a stream chunk like:
